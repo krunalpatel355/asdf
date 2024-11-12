@@ -1,202 +1,272 @@
 <!-- templates/index.html -->
-<!DOCTYPE html>
-<html>
-<head>
-    <title>VES and ETL Processing</title>
-    <style>
-        .selected {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .result-button {
-            margin: 5px;
-            padding: 8px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .container {
-            margin: 20px;
-        }
-        .search-container {
-            margin-top: 20px;
-        }
-        .advanced-search {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            display: none;
-        }
-        .search-box {
-            margin: 10px 0;
-        }
-        .options-container {
-            margin: 10px 0;
-        }
-        #results-container {
-            margin-top: 20px;
-        }
-        .button-group {
-            margin: 15px 0;
-        }
-        .submit-all {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2>VES Processing</h2>
-        <input type="text" id="input-text" placeholder="Enter text">
-        <button onclick="processVES()">Process VES</button>
-        
-        <div id="ves-results"></div>
-        
-        <div id="selected-items-container" style="display: none;">
-            <h3>Selected Items:</h3>
-            <div class="button-group">
-                <button onclick="processETL()">Search Selected Items</button>
-                <button onclick="toggleAdvancedSearch()">Advanced</button>
+{% extends "base.html" %}
+
+{% block title %}Search Tool{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <!-- Initial Input Section -->
+    <div id="initial-section" class="mb-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold mb-4">Search Configuration</h2>
+            <div class="flex space-x-4">
+                <input type="text" id="initial-input" class="flex-1 border p-2 rounded" placeholder="Enter value">
+                <button onclick="getInitialData()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                    Submit
+                </button>
             </div>
-            
-            <div id="advanced-search" class="advanced-search">
-                <div class="search-box">
-                    <input type="text" id="search-box1" placeholder="Search Box 1">
-                </div>
-                <div class="search-box">
-                    <input type="text" id="search-box2" placeholder="Search Box 2">
-                </div>
-                <div class="options-container">
-                    <select id="advanced-option">
-                        <option value="option1">Option 1</option>
-                        <option value="option2">Option 2</option>
-                        <option value="option3">Option 3</option>
-                    </select>
-                </div>
-            </div>
-            
-            <button onclick="submitAll()" class="submit-all">Submit All</button>
         </div>
-        
-        <div id="etl-results"></div>
     </div>
 
-    <script>
-        let selectedItems = new Set();
-        let advancedSearchVisible = false;
+    <!-- Dynamic Buttons Section -->
+    <div id="dynamic-buttons" class="mb-8 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold mb-4">Select Options:</h3>
+            <div id="button-container" class="flex flex-wrap gap-2"></div>
+        </div>
+    </div>
 
-        function processVES() {
-            const inputText = document.getElementById('input-text').value;
-            
-            fetch('/process_ves', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({input_text: inputText})
+    <!-- Search Type Tabs -->
+    <div id="search-tabs" class="hidden">
+        <div class="bg-white rounded-lg shadow-md">
+            <div class="border-b">
+                <nav class="flex space-x-4 px-6 py-3">
+                    <button onclick="switchTab('simple')" id="simple-tab" 
+                            class="px-4 py-2 font-medium rounded-md transition-colors">
+                        Simple Search
+                    </button>
+                    <button onclick="switchTab('advanced')" id="advanced-tab"
+                            class="px-4 py-2 font-medium rounded-md transition-colors">
+                        Advanced Search
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Simple Search -->
+            <div id="simple-search" class="p-6 hidden">
+                <div class="mb-4 p-3 bg-blue-50 rounded">
+                    <i class="fas fa-database mr-2"></i>
+                    Data from database
+                </div>
+                <button onclick="performSimpleSearch()" 
+                        class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition">
+                    Search
+                </button>
+            </div>
+
+            <!-- Advanced Search -->
+            <div id="advanced-search" class="p-6 hidden">
+                <div class="mb-4 p-3 bg-yellow-50 rounded">
+                    <i class="fas fa-clock mr-2"></i>
+                    Manual scrapping (taking longer)
+                </div>
+                <div class="space-y-4">
+                    <div class="flex space-x-4">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From</label>
+                            <input type="datetime-local" id="from-time" class="w-full border p-2 rounded">
+                        </div>
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">To</label>
+                            <input type="datetime-local" id="to-time" class="w-full border p-2 rounded">
+                        </div>
+                    </div>
+                    
+                    <!-- Three Independent Select Options -->
+                    <div class="grid grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="option1" class="w-full border p-2 rounded">
+                                <option value="">Select...</option>
+                                <option value="cat1">Category 1</option>
+                                <option value="cat2">Category 2</option>
+                                <option value="cat3">Category 3</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                            <select id="option2" class="w-full border p-2 rounded">
+                                <option value="">Select...</option>
+                                <option value="active">Active</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                            <select id="option3" class="w-full border p-2 rounded">
+                                <option value="">Select...</option>
+                                <option value="high">High</option>
+                                <option value="medium">Medium</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <input type="text" id="search-text" 
+                               class="w-full border p-2 rounded" 
+                               placeholder="Search text">
+                    </div>
+                    
+                    <button onclick="performAdvancedSearch()" 
+                            class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div id="results" class="mt-8"></div>
+</div>
+
+<script>
+    let selectedButtons = [];
+
+    function getInitialData() {
+        fetch('/get_initial_data', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('dynamic-buttons').classList.remove('hidden');
+            document.getElementById('search-tabs').classList.remove('hidden');
+            renderButtons(data);
+        });
+    }
+
+    function renderButtons(data) {
+        const container = document.getElementById('button-container');
+        container.innerHTML = '';
+        
+        data.options.forEach(btn => {
+            const button = document.createElement('button');
+            button.className = 'border px-4 py-2 rounded-md transition-colors hover:bg-indigo-50';
+            button.textContent = btn;
+            button.onclick = () => toggleButton(btn, button);
+            container.appendChild(button);
+        });
+    }
+
+    function toggleButton(btn, element) {
+        if (selectedButtons.includes(btn)) {
+            selectedButtons = selectedButtons.filter(b => b !== btn);
+            element.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-50');
+            element.classList.add('hover:bg-indigo-50');
+        } else {
+            selectedButtons.push(btn);
+            element.classList.remove('hover:bg-indigo-50');
+            element.classList.add('bg-indigo-600', 'text-white');
+        }
+    }
+
+    function switchTab(tab) {
+        const simpleTab = document.getElementById('simple-tab');
+        const advancedTab = document.getElementById('advanced-tab');
+        const simpleSearch = document.getElementById('simple-search');
+        const advancedSearch = document.getElementById('advanced-search');
+
+        if (tab === 'simple') {
+            simpleTab.classList.add('bg-indigo-100', 'text-indigo-600');
+            advancedTab.classList.remove('bg-indigo-100', 'text-indigo-600');
+            simpleSearch.classList.remove('hidden');
+            advancedSearch.classList.add('hidden');
+        } else {
+            advancedTab.classList.add('bg-indigo-100', 'text-indigo-600');
+            simpleTab.classList.remove('bg-indigo-100', 'text-indigo-600');
+            advancedSearch.classList.remove('hidden');
+            simpleSearch.classList.add('hidden');
+        }
+    }
+
+    function performSimpleSearch() {
+        if (selectedButtons.length === 0) {
+            alert('Please select at least one option');
+            return;
+        }
+        
+        fetch('/simple_search', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({selected_buttons: selectedButtons})
+        })
+        .then(response => response.json())
+        .then(data => {
+            showResults(data.results);
+        })
+        .catch(error => {
+            showError('An error occurred while performing the search');
+        });
+    }
+
+    function performAdvancedSearch() {
+        if (selectedButtons.length === 0) {
+            alert('Please select at least one option');
+            return;
+        }
+
+        const fromTime = document.getElementById('from-time').value;
+        const toTime = document.getElementById('to-time').value;
+        const searchText = document.getElementById('search-text').value;
+        const option1 = document.getElementById('option1').value;
+        const option2 = document.getElementById('option2').value;
+        const option3 = document.getElementById('option3').value;
+
+        if (!fromTime || !toTime) {
+            alert('Please select both from and to times');
+            return;
+        }
+
+        fetch('/advanced_search', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                selected_buttons: selectedButtons,
+                from_time: fromTime,
+                to_time: toTime,
+                option1: option1,
+                option2: option2,
+                option3: option3,
+                search_text: searchText
             })
-            .then(response => response.json())
-            .then(data => displayVESResults(data));
-        }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showResults(data.results);
+        })
+        .catch(error => {
+            showError('An error occurred while performing the advanced search');
+        });
+    }
 
-        function displayVESResults(data) {
-            const container = document.getElementById('ves-results');
-            container.innerHTML = '<h3>Results:</h3>';
-            
-            data.items.forEach(item => {
-                const button = document.createElement('button');
-                button.textContent = item;
-                button.className = 'result-button';
-                button.onclick = () => toggleSelection(button, item);
-                container.appendChild(button);
-            });
-            
-            document.getElementById('selected-items-container').style.display = 'block';
-        }
+    function showResults(results) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-lg font-semibold mb-4">Search Results</h3>
+                <div class="p-4 bg-gray-50 rounded">
+                    ${results}
+                </div>
+            </div>
+        `;
+    }
 
-        function toggleSelection(button, item) {
-            if (selectedItems.has(item)) {
-                selectedItems.delete(item);
-                button.classList.remove('selected');
-            } else {
-                selectedItems.add(item);
-                button.classList.add('selected');
-            }
-        }
+    function showError(message) {
+        const resultsDiv = document.getElementById('results');
+        resultsDiv.innerHTML = `
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <div class="p-4 bg-red-50 text-red-600 rounded">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    ${message}
+                </div>
+            </div>
+        `;
+    }
 
-        function toggleAdvancedSearch() {
-            const advancedSearch = document.getElementById('advanced-search');
-            advancedSearchVisible = !advancedSearchVisible;
-            advancedSearch.style.display = advancedSearchVisible ? 'block' : 'none';
-        }
-
-        function processETL(includeAdvanced = false) {
-            if (selectedItems.size === 0) {
-                alert('Please select at least one item');
-                return;
-            }
-
-            const data = {
-                selected_items: Array.from(selectedItems)
-            };
-
-            if (includeAdvanced && advancedSearchVisible) {
-                data.advanced_params = {
-                    search_box1: document.getElementById('search-box1').value,
-                    search_box2: document.getElementById('search-box2').value,
-                    option: document.getElementById('advanced-option').value
-                };
-            }
-
-            fetch('/process_etl', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(data => displayETLResults(data));
-        }
-
-        function submitAll() {
-            document.getElementById('etl-results').innerHTML = ''; // Clear previous results
-            processETL(true);
-        }
-
-        function displayETLResults(data) {
-            const container = document.getElementById('etl-results');
-            container.innerHTML = '<h3>ETL Results:</h3>';
-            
-            if (data.results) {
-                const basicResults = document.createElement('div');
-                basicResults.innerHTML = '<h4>Basic Results:</h4>';
-                data.results.forEach(result => {
-                    const div = document.createElement('div');
-                    div.textContent = result;
-                    basicResults.appendChild(div);
-                });
-                container.appendChild(basicResults);
-            }
-            
-            if (data.advanced_results) {
-                const advancedResults = document.createElement('div');
-                advancedResults.innerHTML = '<h4>Advanced Results:</h4>';
-                data.advanced_results.forEach(result => {
-                    const div = document.createElement('div');
-                    div.textContent = result;
-                    advancedResults.appendChild(div);
-                });
-                container.appendChild(advancedResults);
-            }
-        }
-    </script>
-</body>
-</html>
+    // Initialize simple tab as default
+    switchTab('simple');
+</script>
+{% endblock %}

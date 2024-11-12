@@ -1,0 +1,89 @@
+<!-- templates/dashboard.html -->
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-800">Analytics Dashboard</h1>
+        <div class="flex space-x-4">
+            <button class="bg-white px-4 py-2 rounded-md shadow-sm border hover:bg-gray-50">
+                <i class="fas fa-download mr-2"></i>Export
+            </button>
+            <button class="bg-indigo-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-indigo-700">
+                <i class="fas fa-sync-alt mr-2"></i>Refresh
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for status, count in status_data.items() %}
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total {{ status }}</p>
+                    <p class="text-2xl font-semibold">{{ count }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                    <i class="fas fa-chart-line text-indigo-600"></i>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex items-center">
+                    <span class="text-green-500 text-sm"><i class="fas fa-arrow-up mr-1"></i>12%</span>
+                    <span class="text-gray-500 text-sm ml-2">vs last month</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Monthly Trends -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Monthly Trends</h3>
+            <canvas id="monthlyChart" height="300"></canvas>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Performance Metrics</h3>
+            <canvas id="performanceChart" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Recent Activity</h3>
+            <button class="text-indigo-600 hover:text-indigo-700">View All</button>
+        </div>
+        <div class="space-y-4">
+            {% for i in range(5) %}
+            <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg transition-colors">
+                <div class="flex items-center space-x-4">
+                    <div class="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <i class="fas fa-user text-gray-500"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium">User Activity {{ i + 1 }}</p>
+                        <p class="text-sm text-gray-500">Action performed at {{ i + 1 }}:00 PM</p>
+                    </div>
+                </div>
+                <span class="text-sm text-gray-500">{{ i + 1 }}h ago</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+    
+<!-- Assuming your chart canvas elements are defined above -->
+
+
+
+{% endblock %}
