@@ -1,272 +1,261 @@
 <!-- templates/index.html -->
 {% extends "base.html" %}
 
-{% block title %}Search Tool{% endblock %}
+{% block title %}Reddit Search Tool{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-4xl mx-auto p-4">
     <!-- Initial Input Section -->
     <div id="initial-section" class="mb-8">
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h2 class="text-xl font-semibold mb-4">Search Configuration</h2>
+            <h2 class="text-xl font-semibold mb-4">Subreddit Search</h2>
             <div class="flex space-x-4">
-                <input type="text" id="initial-input" class="flex-1 border p-2 rounded" placeholder="Enter value">
-                <button onclick="getInitialData()" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
-                    Submit
+                <input type="text" id="initial-input" 
+                       class="flex-1 border p-2 rounded" 
+                       placeholder="Enter subreddit name (comma-separated for multiple)">
+                <button onclick="getSubreddits()" 
+                        class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700 transition">
+                    Load Subreddits
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Dynamic Buttons Section -->
-    <div id="dynamic-buttons" class="mb-8 hidden">
+    <!-- Selected Subreddits Section -->
+    <div id="selected-subreddits" class="mb-8 hidden">
         <div class="bg-white p-6 rounded-lg shadow-md">
-            <h3 class="text-lg font-semibold mb-4">Select Options:</h3>
-            <div id="button-container" class="flex flex-wrap gap-2"></div>
+            <h3 class="text-lg font-semibold mb-4">Selected Subreddits:</h3>
+            <div id="subreddit-tags" class="flex flex-wrap gap-2"></div>
         </div>
     </div>
 
-    <!-- Search Type Tabs -->
-    <div id="search-tabs" class="hidden">
-        <div class="bg-white rounded-lg shadow-md">
-            <div class="border-b">
-                <nav class="flex space-x-4 px-6 py-3">
-                    <button onclick="switchTab('simple')" id="simple-tab" 
-                            class="px-4 py-2 font-medium rounded-md transition-colors">
-                        Simple Search
-                    </button>
-                    <button onclick="switchTab('advanced')" id="advanced-tab"
-                            class="px-4 py-2 font-medium rounded-md transition-colors">
-                        Advanced Search
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Simple Search -->
-            <div id="simple-search" class="p-6 hidden">
-                <div class="mb-4 p-3 bg-blue-50 rounded">
-                    <i class="fas fa-database mr-2"></i>
-                    Data from database
+    <!-- Search Configuration -->
+    <div id="search-config" class="hidden">
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-4">Search Configuration</h3>
+            
+            <!-- Time Range -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                    <input type="datetime-local" id="from-time" class="w-full border p-2 rounded">
                 </div>
-                <button onclick="performSimpleSearch()" 
-                        class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition">
-                    Search
-                </button>
-            </div>
-
-            <!-- Advanced Search -->
-            <div id="advanced-search" class="p-6 hidden">
-                <div class="mb-4 p-3 bg-yellow-50 rounded">
-                    <i class="fas fa-clock mr-2"></i>
-                    Manual scrapping (taking longer)
-                </div>
-                <div class="space-y-4">
-                    <div class="flex space-x-4">
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">From</label>
-                            <input type="datetime-local" id="from-time" class="w-full border p-2 rounded">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">To</label>
-                            <input type="datetime-local" id="to-time" class="w-full border p-2 rounded">
-                        </div>
-                    </div>
-                    
-                    <!-- Three Independent Select Options -->
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <select id="option1" class="w-full border p-2 rounded">
-                                <option value="">Select...</option>
-                                <option value="cat1">Category 1</option>
-                                <option value="cat2">Category 2</option>
-                                <option value="cat3">Category 3</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                            <select id="option2" class="w-full border p-2 rounded">
-                                <option value="">Select...</option>
-                                <option value="active">Active</option>
-                                <option value="pending">Pending</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                            <select id="option3" class="w-full border p-2 rounded">
-                                <option value="">Select...</option>
-                                <option value="high">High</option>
-                                <option value="medium">Medium</option>
-                                <option value="low">Low</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div>
-                        <input type="text" id="search-text" 
-                               class="w-full border p-2 rounded" 
-                               placeholder="Search text">
-                    </div>
-                    
-                    <button onclick="performAdvancedSearch()" 
-                            class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600 transition">
-                        Search
-                    </button>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                    <input type="datetime-local" id="to-time" class="w-full border p-2 rounded">
                 </div>
             </div>
+
+            <!-- Sort Types -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Sort Types</label>
+                <div class="flex gap-4">
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" class="sort-type" value="hot" checked>
+                        <span class="ml-2">Hot</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" class="sort-type" value="new" checked>
+                        <span class="ml-2">New</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="checkbox" class="sort-type" value="top" checked>
+                        <span class="ml-2">Top</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Posts and Comments Configuration -->
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Number of Posts</label>
+                    <input type="number" id="post-limit" class="w-full border p-2 rounded" 
+                           value="100" min="1" max="1000">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Include Comments</label>
+                    <select id="include-comments" class="w-full border p-2 rounded">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Search Text -->
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Search Text (Optional)</label>
+                <input type="text" id="search-text" class="w-full border p-2 rounded" 
+                       placeholder="Enter keywords to filter posts">
+            </div>
+
+            <!-- Search Button -->
+            <button onclick="performSearch()" 
+                    class="w-full bg-green-500 text-white px-6 py-3 rounded hover:bg-green-600 transition">
+                Search Posts
+            </button>
         </div>
     </div>
 
     <!-- Results Section -->
-    <div id="results" class="mt-8"></div>
+    <div id="results" class="mt-8 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-semibold mb-4">Search Results</h3>
+            <div id="results-content" class="p-4 bg-gray-50 rounded"></div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="hidden mt-8">
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <div class="flex items-center justify-center">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <span class="ml-3">Processing search...</span>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    let selectedButtons = [];
+let selectedSubreddits = [];
 
-    function getInitialData() {
-        fetch('/get_initial_data', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-        })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('dynamic-buttons').classList.remove('hidden');
-            document.getElementById('search-tabs').classList.remove('hidden');
-            renderButtons(data);
-        });
+function getSubreddits() {
+    const input = document.getElementById('initial-input').value;
+    if (!input.trim()) {
+        showError('Please enter at least one subreddit');
+        return;
     }
 
-    function renderButtons(data) {
-        const container = document.getElementById('button-container');
-        container.innerHTML = '';
-        
-        data.options.forEach(btn => {
-            const button = document.createElement('button');
-            button.className = 'border px-4 py-2 rounded-md transition-colors hover:bg-indigo-50';
-            button.textContent = btn;
-            button.onclick = () => toggleButton(btn, button);
-            container.appendChild(button);
-        });
+    selectedSubreddits = input.split(',').map(s => s.trim()).filter(s => s);
+    if (selectedSubreddits.length === 0) {
+        showError('Please enter valid subreddit names');
+        return;
     }
 
-    function toggleButton(btn, element) {
-        if (selectedButtons.includes(btn)) {
-            selectedButtons = selectedButtons.filter(b => b !== btn);
-            element.classList.remove('bg-indigo-600', 'text-white', 'hover:bg-indigo-50');
-            element.classList.add('hover:bg-indigo-50');
-        } else {
-            selectedButtons.push(btn);
-            element.classList.remove('hover:bg-indigo-50');
-            element.classList.add('bg-indigo-600', 'text-white');
-        }
-    }
+    // Show selected subreddits
+    document.getElementById('selected-subreddits').classList.remove('hidden');
+    document.getElementById('search-config').classList.remove('hidden');
+    renderSubredditTags();
+}
 
-    function switchTab(tab) {
-        const simpleTab = document.getElementById('simple-tab');
-        const advancedTab = document.getElementById('advanced-tab');
-        const simpleSearch = document.getElementById('simple-search');
-        const advancedSearch = document.getElementById('advanced-search');
-
-        if (tab === 'simple') {
-            simpleTab.classList.add('bg-indigo-100', 'text-indigo-600');
-            advancedTab.classList.remove('bg-indigo-100', 'text-indigo-600');
-            simpleSearch.classList.remove('hidden');
-            advancedSearch.classList.add('hidden');
-        } else {
-            advancedTab.classList.add('bg-indigo-100', 'text-indigo-600');
-            simpleTab.classList.remove('bg-indigo-100', 'text-indigo-600');
-            advancedSearch.classList.remove('hidden');
-            simpleSearch.classList.add('hidden');
-        }
-    }
-
-    function performSimpleSearch() {
-        if (selectedButtons.length === 0) {
-            alert('Please select at least one option');
-            return;
-        }
-        
-        fetch('/simple_search', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({selected_buttons: selectedButtons})
-        })
-        .then(response => response.json())
-        .then(data => {
-            showResults(data.results);
-        })
-        .catch(error => {
-            showError('An error occurred while performing the search');
-        });
-    }
-
-    function performAdvancedSearch() {
-        if (selectedButtons.length === 0) {
-            alert('Please select at least one option');
-            return;
-        }
-
-        const fromTime = document.getElementById('from-time').value;
-        const toTime = document.getElementById('to-time').value;
-        const searchText = document.getElementById('search-text').value;
-        const option1 = document.getElementById('option1').value;
-        const option2 = document.getElementById('option2').value;
-        const option3 = document.getElementById('option3').value;
-
-        if (!fromTime || !toTime) {
-            alert('Please select both from and to times');
-            return;
-        }
-
-        fetch('/advanced_search', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                selected_buttons: selectedButtons,
-                from_time: fromTime,
-                to_time: toTime,
-                option1: option1,
-                option2: option2,
-                option3: option3,
-                search_text: searchText
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            showResults(data.results);
-        })
-        .catch(error => {
-            showError('An error occurred while performing the advanced search');
-        });
-    }
-
-    function showResults(results) {
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = `
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="text-lg font-semibold mb-4">Search Results</h3>
-                <div class="p-4 bg-gray-50 rounded">
-                    ${results}
-                </div>
-            </div>
+function renderSubredditTags() {
+    const container = document.getElementById('subreddit-tags');
+    container.innerHTML = '';
+    
+    selectedSubreddits.forEach(subreddit => {
+        const tag = document.createElement('div');
+        tag.className = 'bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full flex items-center';
+        tag.innerHTML = `
+            <span>r/${subreddit}</span>
+            <button onclick="removeSubreddit('${subreddit}')" 
+                    class="ml-2 text-indigo-600 hover:text-indigo-800">×</button>
         `;
+        container.appendChild(tag);
+    });
+}
+
+function removeSubreddit(subreddit) {
+    selectedSubreddits = selectedSubreddits.filter(s => s !== subreddit);
+    renderSubredditTags();
+    if (selectedSubreddits.length === 0) {
+        document.getElementById('selected-subreddits').classList.add('hidden');
+        document.getElementById('search-config').classList.add('hidden');
+    }
+}
+
+function getSelectedSortTypes() {
+    return Array.from(document.querySelectorAll('.sort-type:checked'))
+                .map(checkbox => checkbox.value);
+}
+
+function showLoading(show) {
+    document.getElementById('loading').classList.toggle('hidden', !show);
+    document.getElementById('results').classList.add('hidden');
+}
+
+function performSearch() {
+    if (selectedSubreddits.length === 0) {
+        showError('Please select at least one subreddit');
+        return;
     }
 
-    function showError(message) {
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.innerHTML = `
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <div class="p-4 bg-red-50 text-red-600 rounded">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    ${message}
-                </div>
-            </div>
-        `;
+    const fromTime = document.getElementById('from-time').value;
+    const toTime = document.getElementById('to-time').value;
+    
+    if (!fromTime || !toTime) {
+        showError('Please select both from and to dates');
+        return;
     }
 
-    // Initialize simple tab as default
-    switchTab('simple');
+    const sortTypes = getSelectedSortTypes();
+    if (sortTypes.length === 0) {
+        showError('Please select at least one sort type');
+        return;
+    }
+
+    const searchParams = {
+        selected_buttons: selectedSubreddits,
+        from_time: fromTime,
+        to_time: toTime,
+        option1: sortTypes,
+        option2: document.getElementById('post-limit').value,
+        option3: document.getElementById('include-comments').value,
+        search_text: document.getElementById('search-text').value
+    };
+
+    showLoading(true);
+
+    fetch('/advanced_search', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(searchParams)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.status === 'success') {
+            showResults(data.results);
+        } else {
+            showError(data.message);
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        showError('An error occurred while performing the search');
+        console.error('Search error:', error);
+    });
+}
+
+function showResults(results) {
+    const resultsDiv = document.getElementById('results');
+    const resultsContent = document.getElementById('results-content');
+    resultsDiv.classList.remove('hidden');
+    resultsContent.innerHTML = results;
+}
+
+function showError(message) {
+    const resultsDiv = document.getElementById('results');
+    const resultsContent = document.getElementById('results-content');
+    resultsDiv.classList.remove('hidden');
+    resultsContent.innerHTML = `
+        <div class="p-4 bg-red-50 text-red-600 rounded">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            ${message}
+        </div>
+    `;
+}
+
+// Set default datetime-local values to current date
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Format dates for datetime-local input
+    const formatDate = (date) => {
+        return date.toISOString().slice(0, 16);
+    };
+    
+    document.getElementById('from-time').value = formatDate(oneWeekAgo);
+    document.getElementById('to-time').value = formatDate(now);
+});
 </script>
 {% endblock %}

@@ -2,6 +2,7 @@
 from flask import Flask, render_template, request, jsonify
 from datetime import datetime
 import random  # For demo dashboard data
+from EnhancedETL import EnhancedETL
 
 app = Flask(__name__)
 
@@ -54,20 +55,32 @@ def simple_search():
 
 @app.route('/advanced_search', methods=['POST'])
 def advanced_search():
-    data = request.json
-    etl = ETL()
-    results = etl.search(
-        data.get('selected_buttons', []),
-        data.get('from_time'),
-        data.get('to_time'),
-        {
-            'option1': data.get('option1'),
-            'option2': data.get('option2'),
-            'option3': data.get('option3')
-        },
-        data.get('search_text')
-    )
-    return jsonify({"results": results})
+    try:
+        data = request.json
+        etl = EnhancedETL()
+        results = etl.perform_search(data)
+        
+        if results["status"] == "success":
+            return jsonify({
+                "status": "success",
+                "results": f"""
+                    Search ID: {results['search_id']}<br>
+                    Total Posts Found: {results['total_posts']}<br>
+                    Subreddits: {', '.join(results['subreddits'])}<br>
+                    Time Range: {results['time_range']['from']} to {results['time_range']['to']}
+                """
+            })
+        else:
+            return jsonify({
+                "status": "error",
+                "message": results["message"]
+            }), 400
+            
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
