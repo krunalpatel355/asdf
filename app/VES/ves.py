@@ -134,7 +134,7 @@ class VectorSearch:
             raise
 
 
-def VES(input_text):
+def VectorSrc(input_text):
     try:
         vector_search = VectorSearch()
 
@@ -158,7 +158,10 @@ def VES(input_text):
 
         # return convert(results)
         results = [results[i] for i in range(0,len(results),2)]
-        return {"items": results}
+        return {
+            # "options": [f"Option {i}" for i in range(1, 11)]
+            "options":results
+        }
 
     except Exception as e:
         print(f"An error occurred: {e}")
